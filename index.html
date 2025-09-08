@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>問答互動 Demo</title>
+  <style>
+    :root { --bg:#0b0c0f; --panel:#151922; --acc:#4da3ff; --acc2:#91f2c3; --text:#e8eefb; --muted:#a7b1c6; }
+    *{box-sizing:border-box}
+    body{margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans TC", Helvetica, Arial; background:linear-gradient(180deg,#0b0c0f,#10131a 40%,#0b0c0f); color:var(--text); display:flex; align-items:center; justify-content:center; min-height:100svh;}
+    .card{ width:min(860px, 92vw); background:rgba(21,25,34,.9); border:1px solid #222833; border-radius:24px; box-shadow:0 10px 40px rgba(0,0,0,.45); overflow:hidden}
+    header{padding:18px 22px; display:flex; align-items:center; gap:12px; border-bottom:1px solid #1f2530; background:linear-gradient(180deg, #171b24, #141925);} 
+    .logo{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,var(--acc),var(--acc2));}
+    h1{font-size:18px; margin:0; letter-spacing:.4px}
+    main{padding:28px 24px 24px}
+    .qtext{font-size:22px; line-height:1.35; margin:4px 0 18px; font-weight:700}
+    .muted{color:var(--muted); font-size:14px}
+    .choices{display:grid; grid-template-columns:1fr; gap:12px}
+    @media (min-width:640px){ .choices{ grid-template-columns:1fr 1fr } }
+    button.choice{ padding:14px 16px; border-radius:14px; border:1px solid #2a3242; background:#131823; color:var(--text); text-align:left; cursor:pointer; transition:.15s transform ease, .15s border-color ease, .15s background ease; }
+    button.choice:hover{ transform:translateY(-1px); border-color:#3b465d; background:#0f1420 }
+    button.choice:active{ transform:translateY(0) scale(.99) }
+    .footer{display:flex; align-items:center; justify-content:space-between; gap:12px; padding-top:16px;}
+    .btn{border:1px solid #2a3242; background:#111521; color:var(--text); padding:10px 14px; border-radius:12px; cursor:pointer}
+    .btn[disabled]{opacity:.45; cursor:not-allowed}
+    .primary{background:linear-gradient(135deg,var(--acc),#6bb9ff); border:none; color:#041424; font-weight:700}
+    .progress{height:8px; background:#101521; border-radius:999px; overflow:hidden; border:1px solid #1e2530}
+    .bar{height:100%; width:0%; background:linear-gradient(90deg, var(--acc), var(--acc2)); transition: width .3s ease}
+    .result{display:grid; gap:12px}
+    .pill{display:inline-flex; align-items:center; gap:8px; background:#0f1520; border:1px solid #283043; padding:6px 10px; border-radius:999px; font-size:12px; color:var(--muted)}
+    .result h2{margin:.2rem 0 0; font-size:26px}
+    .share{display:flex; gap:8px; flex-wrap:wrap}
+    .hidden{display:none}
+    .small{font-size:12px; color:var(--muted)}
+    .hr{height:1px; background:#1f2530; margin:10px 0 0}
+  </style>
+</head>
+<body>
+  <!--
+    使用方式：
+    1) 修改下方 FLOW 物件即可客製化。
+       - tags: 定義要計分的向度（可隨意新增/刪除）
+       - questions: 題目陣列；每個選項可設定加分（scores）以及跳題去向（to）
+       - finish.type: "max" 代表取最高分向度、"threshold" 可依分數門檻決定結果
+    2) 這個示範同時支援「分流跳題」與「多向度加分」。
+    3) 單檔即可部署在 GitHub Pages / Netlify / Vercel。
+  -->
+  <div class="card" role="region" aria-label="問答互動">
+    <header>
+      <div class="logo" aria-hidden="true"></div>
+      <h1 id="title">問答互動 Demo</h1>
+    </header>
+    <main>
+      <div class="muted" id="subtitle">共 <span id="total">—</span> 題 · <span id="mode">分流 + 計分</span></div>
+      <div class="hr"></div>
+      <div class="progress" aria-hidden="true" style="margin:14px 0 18px"><div class="bar" id="bar"></div></div>
+
+      <div id="screen-question">
+        <div class="pill"><span id="index">1</span>/<span id="count">—</span></div>
+        <div class="qtext" id="qtext">載入中…</div>
+        <div class="choices" id="choices"></div>
+        <div class="footer">
+          <button class="btn" id="backBtn" aria-label="上一步">← 上一步</button>
+          <button class="btn primary" id="skipBtn" aria-label="跳過此題">跳過</button>
+        </div>
+      </div>
+
+      <div id="screen-result" class="hidden">
+        <div class="result">
+          <div class="pill" id="pill"></div>
+          <h2 id="rtitle">結果標題</h2>
+          <p id="rdesc" class="muted"></p>
+          <div class="share">
+            <button class="btn" id="restart">重新開始</button>
+            <button class="btn" id="copy">複製結果連結</button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+  // —— 可調整區：互動流程 ——
+  const FLOW = {
+    title: "Snap-on / BAHCO 小測驗",
+    modeLabel: "三題計分",
+    tags: ["score"], // 單一向度：總分
+    questions: [
+      {
+        id: "q1",
+        text: "請問Snap-on集團在哪一年創立?",
+        options: [
+          { label: "1920年", scores: {"score": 1}, to: "q2" },
+          { label: "1930年", scores: {"score": 0}, to: "q2" },
+          { label: "1950年", scores: {"score": 0}, to: "q2" },
+        ]
+      },
+      {
+        id: "q2",
+        text: "以下哪一類工具產品是Snap-on最早拓展的主要市場?",
+        options: [
+          { label: "汽車維修", scores: {"score": 1}, to: "q3" },
+          { label: "園藝", scores: {"score": 0}, to: "q3" },
+          { label: "醫療外科", scores: {"score": 0}, to: "q3" },
+        ]
+      },
+      {
+        id: "q3",
+        text: "Snap-on旗下的BAHCO最廣為人知的代表產品是什麼?",
+        options: [
+          { label: "扭力測試儀", scores: {"score": 0} },
+          { label: "活動扳手", scores: {"score": 1} },
+          { label: "鉗子", scores: {"score": 0} },
+        ]
+      },
+    ],
+    finish: { 
+      type: "threshold",
+      rules: [
+        { when: s => (s["score"]||0) === 3, result: "Excellent!" },
+        { when: s => (s["score"]||0) === 2, result: "Good Job!" },
+        { when: s => (s["score"]||0) <= 1, result: "再加油!" },
+      ]
+    },
+    results: {
+      "Excellent!": { title: "Excellent!", desc: "三題全對！你對 Snap‑on / BAHCO 超熟～" },
+      "Good Job!": { title: "Good Job!", desc: "對了兩題，已經很不錯！" },
+      "再加油!": { title: "再加油!", desc: "再多了解一點品牌故事，下次一定可以更好！" },
+    }
+  };
+
+  // —— 程式：渲染與流程控制 ——
+  const $ = sel => document.querySelector(sel);
+  const el = {
+    title: $('#title'), subtitle: $('#subtitle'), total: $('#total'), mode: $('#mode'),
+    qscreen: $('#screen-question'), rscreen: $('#screen-result'),
+    qtext: $('#qtext'), choices: $('#choices'), index: $('#index'), count: $('#count'),
+    bar: $('#bar'), back: $('#backBtn'), skip: $('#skipBtn'),
+    pill: $('#pill'), rtitle: $('#rtitle'), rdesc: $('#rdesc'), restart: $('#restart'), copy: $('#copy')
+  };
+
+  let history = [];          // 已回答題目的 {id, pickedIndex}
+  let scores = {};           // 各向度分數
+  let currentId = FLOW.questions[0].id;
+
+  function init(){
+    document.title = FLOW.title + ' · Demo';
+    el.title.textContent = FLOW.title;
+    el.mode.textContent = FLOW.modeLabel || '';
+    el.total.textContent = FLOW.questions.length;
+    el.count.textContent = FLOW.questions.length;
+    el.back.disabled = true;
+    el.skip.addEventListener('click', onSkip);
+    el.back.addEventListener('click', onBack);
+    el.restart.addEventListener('click', restart);
+    el.copy.addEventListener('click', copyLink);
+    FLOW.tags.forEach(t => scores[t] = 0);
+    const hash = new URL(location.href).hash;
+    if (hash.startsWith('#r=')) { // 支援結果直達連結
+      const key = decodeURIComponent(hash.slice(3));
+      return showResult(key);
+    }
+    renderQuestion(currentId);
+  }
+
+  function getQ(id){ return FLOW.questions.find(q=>q.id===id); }
+
+  function renderQuestion(id){
+    const q = getQ(id);
+    if(!q) return finish();
+    currentId = id;
+    el.qscreen.classList.remove('hidden');
+    el.rscreen.classList.add('hidden');
+    el.index.textContent = 1 + history.length;
+    el.qtext.textContent = q.text;
+
+    // 進度條：按答題數估算（遇到分流時以已作答數呈現）
+    const progress = Math.min(100, Math.round((history.length / FLOW.questions.length) * 100));
+    el.bar.style.width = progress + '%';
+
+    // 建立選項
+    el.choices.innerHTML = '';
+    q.options.forEach((opt, i) => {
+      const b = document.createElement('button');
+      b.className = 'choice';
+      b.setAttribute('role','button');
+      b.textContent = opt.label;
+      b.addEventListener('click', () => onPick(q, i));
+      el.choices.appendChild(b);
+    });
+
+    // 控制返回/跳過
+    el.back.disabled = history.length === 0;
+    el.skip.disabled = false;
+  }
+
+  function onPick(q, pickedIndex){
+    const opt = q.options[pickedIndex];
+    // 記錄歷史
+    history.push({ id:q.id, pickedIndex });
+    // 計分
+    if (opt.scores) Object.entries(opt.scores).forEach(([k,v]) => scores[k] = (scores[k]||0) + Number(v||0));
+    // 下一題
+    const next = opt.to || nextSequential(q.id);
+    if (next) return renderQuestion(next);
+    finish();
+  }
+
+  function nextSequential(id){
+    const idx = FLOW.questions.findIndex(x=>x.id===id);
+    const next = FLOW.questions[idx+1];
+    return next?.id || null;
+  }
+
+  function onBack(){
+    if (!history.length) return;
+    const last = history.pop();
+    // 回滾分數
+    const q = getQ(last.id);
+    const chosen = q.options[last.pickedIndex];
+    if (chosen.scores) Object.entries(chosen.scores).forEach(([k,v]) => scores[k] = (scores[k]||0) - Number(v||0));
+    // 回上一題（優先回到當時來源題）
+    const prevId = history.length ? history[history.length-1].id : FLOW.questions[0].id;
+    // 尋找上一題實際的下一步（為了呈現邏輯一致性，回到上一題本身）
+    renderQuestion(prevId);
+  }
+
+  function onSkip(){
+    const q = getQ(currentId);
+    // 無加分、直接走順序或 to
+    const next = nextSequential(q.id);
+    if (next) { history.push({ id:q.id, pickedIndex: -1 }); renderQuestion(next); }
+    else finish();
+  }
+
+  function finish(){
+    // 依 finish.type 決定結果
+    let key = null;
+    if (FLOW.finish?.type === 'max'){
+      const entries = Object.entries(scores);
+      entries.sort((a,b)=>b[1]-a[1]);
+      key = entries[0]?.[0] || FLOW.tags[0];
+      // 平手處理：若前兩名同分，選擇與最後一題答案對應分數的那個向度（更貼近使用者最近選擇）
+      if (entries[1] && entries[1][1] === entries[0][1] && history.length){
+        const last = history[history.length-1];
+        const q = getQ(last.id);
+        const chosen = q.options[last.pickedIndex];
+        const keys = Object.keys(chosen?.scores || {});
+        if (keys.length) key = keys[0];
+      }
+    } else if (FLOW.finish?.type === 'threshold'){
+      const rule = FLOW.finish.rules.find(r => r.when(scores));
+      key = rule ? rule.result : FLOW.tags[0];
+    } else {
+      key = FLOW.tags[0];
+    }
+    showResult(key);
+  }
+
+  function showResult(key){
+    el.qscreen.classList.add('hidden');
+    el.rscreen.classList.remove('hidden');
+    el.pill.textContent = `最高分：${key}`;
+    el.rtitle.textContent = FLOW.results[key]?.title || key;
+    el.rdesc.textContent = FLOW.results[key]?.desc || '';
+    el.bar.style.width = '100%';
+    // 透過網址 hash 產生可分享連結
+    location.hash = '#r=' + encodeURIComponent(key);
+  }
+
+  function restart(){
+    history = []; scores = {}; FLOW.tags.forEach(t => scores[t]=0);
+    location.hash = '';
+    currentId = FLOW.questions[0].id;
+    renderQuestion(currentId);
+  }
+
+  async function copyLink(){
+    try{ await navigator.clipboard.writeText(location.href); alert('已複製結果連結'); }catch(e){ alert('複製失敗，請手動複製網址'); }
+  }
+
+  init();
+  </script>
+</body>
+</html>
