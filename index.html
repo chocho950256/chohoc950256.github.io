@@ -3,14 +3,15 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>問答互動 Demo</title>
+  <title>Snap-on小測驗</title>
+  <meta name="description" content="Snap-on 小測驗：三題計分，結果分為 Excellent! / Good Job! / 再加油!" />
   <style>
-    :root { --bg:#0b0c0f; --panel:#151922; --acc:#4da3ff; --acc2:#91f2c3; --text:#e8eefb; --muted:#a7b1c6; }
+    :root { --bg:#0b0c0f; --panel:#151922; --acc:#ff2a2a; --acc2:#ff6b6b; --text:#e8eefb; --muted:#a7b1c6; }
     *{box-sizing:border-box}
     body{margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans TC", Helvetica, Arial; background:linear-gradient(180deg,#0b0c0f,#10131a 40%,#0b0c0f); color:var(--text); display:flex; align-items:center; justify-content:center; min-height:100svh;}
     .card{ width:min(860px, 92vw); background:rgba(21,25,34,.9); border:1px solid #222833; border-radius:24px; box-shadow:0 10px 40px rgba(0,0,0,.45); overflow:hidden}
-    header{padding:18px 22px; display:flex; align-items:center; gap:12px; border-bottom:1px solid #1f2530; background:linear-gradient(180deg, #171b24, #141925);} 
-    .logo{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,var(--acc),var(--acc2));}
+    header{padding:16px 20px; display:flex; align-items:center; gap:14px; border-bottom:1px solid #1f2530; background:linear-gradient(180deg, #171b24, #141925);} 
+    img.brand{height:34px; width:auto; display:block}
     h1{font-size:18px; margin:0; letter-spacing:.4px}
     main{padding:28px 24px 24px}
     .qtext{font-size:22px; line-height:1.35; margin:4px 0 18px; font-weight:700}
@@ -23,7 +24,7 @@
     .footer{display:flex; align-items:center; justify-content:space-between; gap:12px; padding-top:16px;}
     .btn{border:1px solid #2a3242; background:#111521; color:var(--text); padding:10px 14px; border-radius:12px; cursor:pointer}
     .btn[disabled]{opacity:.45; cursor:not-allowed}
-    .primary{background:linear-gradient(135deg,var(--acc),#6bb9ff); border:none; color:#041424; font-weight:700}
+    .primary{background:linear-gradient(135deg,var(--acc),#ff9a9a); border:none; color:#260000; font-weight:700}
     .progress{height:8px; background:#101521; border-radius:999px; overflow:hidden; border:1px solid #1e2530}
     .bar{height:100%; width:0%; background:linear-gradient(90deg, var(--acc), var(--acc2)); transition: width .3s ease}
     .result{display:grid; gap:12px}
@@ -36,22 +37,13 @@
   </style>
 </head>
 <body>
-  <!--
-    使用方式：
-    1) 修改下方 FLOW 物件即可客製化。
-       - tags: 定義要計分的向度（可隨意新增/刪除）
-       - questions: 題目陣列；每個選項可設定加分（scores）以及跳題去向（to）
-       - finish.type: "max" 代表取最高分向度、"threshold" 可依分數門檻決定結果
-    2) 這個示範同時支援「分流跳題」與「多向度加分」。
-    3) 單檔即可部署在 GitHub Pages / Netlify / Vercel。
-  -->
   <div class="card" role="region" aria-label="問答互動">
     <header>
-      <div class="logo" aria-hidden="true"></div>
-      <h1 id="title">問答互動 Demo</h1>
+      <img class="brand" src="logo.png" alt="Snap-on" />
+      <h1 id="title">Snap-on小測驗</h1>
     </header>
     <main>
-      <div class="muted" id="subtitle">共 <span id="total">—</span> 題 · <span id="mode">分流 + 計分</span></div>
+      <div class="muted" id="subtitle">共 <span id="total">—</span> 題 · <span id="mode">三題計分</span></div>
       <div class="hr"></div>
       <div class="progress" aria-hidden="true" style="margin:14px 0 18px"><div class="bar" id="bar"></div></div>
 
@@ -82,7 +74,7 @@
   <script>
   // —— 可調整區：互動流程 ——
   const FLOW = {
-    title: "Snap-on 小測驗",
+    title: "Snap-on小測驗",
     modeLabel: "三題計分",
     tags: ["score"], // 單一向度：總分
     questions: [
@@ -114,6 +106,7 @@
         ]
       },
     ],
+    // 依總分決定結果
     finish: { 
       type: "threshold",
       rules: [
@@ -123,9 +116,9 @@
       ]
     },
     results: {
-      "Excellent!": { title: "Excellent!", desc: "三題全對！你對 Snap‑on / BAHCO 超熟～" },
+      "Excellent!": { title: "Excellent!", desc: "三題全對！你對 Snap-on / BAHCO 超熟～" },
       "Good Job!": { title: "Good Job!", desc: "對了兩題，已經很不錯！" },
-      "再加油!": { title: "再加油!", desc: "再多了解一點品牌故事，下次一定可以更好！" },
+      "再加油!":   { title: "再加油!",   desc: "再多了解一點品牌故事，下次一定可以更好！" },
     }
   };
 
@@ -144,7 +137,7 @@
   let currentId = FLOW.questions[0].id;
 
   function init(){
-    document.title = FLOW.title + ' · Demo';
+    document.title = FLOW.title;
     el.title.textContent = FLOW.title;
     el.mode.textContent = FLOW.modeLabel || '';
     el.total.textContent = FLOW.questions.length;
@@ -174,11 +167,11 @@
     el.index.textContent = 1 + history.length;
     el.qtext.textContent = q.text;
 
-    // 進度條：按答題數估算（遇到分流時以已作答數呈現）
+    // 進度條
     const progress = Math.min(100, Math.round((history.length / FLOW.questions.length) * 100));
     el.bar.style.width = progress + '%';
 
-    // 建立選項
+    // 選項
     el.choices.innerHTML = '';
     q.options.forEach((opt, i) => {
       const b = document.createElement('button');
@@ -189,18 +182,14 @@
       el.choices.appendChild(b);
     });
 
-    // 控制返回/跳過
     el.back.disabled = history.length === 0;
     el.skip.disabled = false;
   }
 
   function onPick(q, pickedIndex){
     const opt = q.options[pickedIndex];
-    // 記錄歷史
     history.push({ id:q.id, pickedIndex });
-    // 計分
     if (opt.scores) Object.entries(opt.scores).forEach(([k,v]) => scores[k] = (scores[k]||0) + Number(v||0));
-    // 下一題
     const next = opt.to || nextSequential(q.id);
     if (next) return renderQuestion(next);
     finish();
@@ -215,44 +204,28 @@
   function onBack(){
     if (!history.length) return;
     const last = history.pop();
-    // 回滾分數
     const q = getQ(last.id);
     const chosen = q.options[last.pickedIndex];
     if (chosen.scores) Object.entries(chosen.scores).forEach(([k,v]) => scores[k] = (scores[k]||0) - Number(v||0));
-    // 回上一題（優先回到當時來源題）
     const prevId = history.length ? history[history.length-1].id : FLOW.questions[0].id;
-    // 尋找上一題實際的下一步（為了呈現邏輯一致性，回到上一題本身）
     renderQuestion(prevId);
   }
 
   function onSkip(){
     const q = getQ(currentId);
-    // 無加分、直接走順序或 to
     const next = nextSequential(q.id);
     if (next) { history.push({ id:q.id, pickedIndex: -1 }); renderQuestion(next); }
     else finish();
   }
 
   function finish(){
-    // 依 finish.type 決定結果
     let key = null;
-    if (FLOW.finish?.type === 'max'){
-      const entries = Object.entries(scores);
-      entries.sort((a,b)=>b[1]-a[1]);
-      key = entries[0]?.[0] || FLOW.tags[0];
-      // 平手處理：若前兩名同分，選擇與最後一題答案對應分數的那個向度（更貼近使用者最近選擇）
-      if (entries[1] && entries[1][1] === entries[0][1] && history.length){
-        const last = history[history.length-1];
-        const q = getQ(last.id);
-        const chosen = q.options[last.pickedIndex];
-        const keys = Object.keys(chosen?.scores || {});
-        if (keys.length) key = keys[0];
-      }
-    } else if (FLOW.finish?.type === 'threshold'){
+    if (FLOW.finish?.type === 'threshold'){
       const rule = FLOW.finish.rules.find(r => r.when(scores));
-      key = rule ? rule.result : FLOW.tags[0];
+      key = rule ? rule.result : "再加油!";
     } else {
-      key = FLOW.tags[0];
+      const entries = Object.entries(scores).sort((a,b)=>b[1]-a[1]);
+      key = entries[0]?.[0] || "再加油!";
     }
     showResult(key);
   }
@@ -260,11 +233,10 @@
   function showResult(key){
     el.qscreen.classList.add('hidden');
     el.rscreen.classList.remove('hidden');
-    el.pill.textContent = `最高分：${key}`;
+    el.pill.textContent = `總分：${scores["score"]||0} / 3`;
     el.rtitle.textContent = FLOW.results[key]?.title || key;
     el.rdesc.textContent = FLOW.results[key]?.desc || '';
     el.bar.style.width = '100%';
-    // 透過網址 hash 產生可分享連結
     location.hash = '#r=' + encodeURIComponent(key);
   }
 
