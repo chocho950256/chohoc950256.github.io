@@ -2,256 +2,630 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Snap-on小測驗</title>
-  <meta name="description" content="Snap-on 小測驗：三題計分，結果分為 Excellent! / Good Job! / 再加油!" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>John Bean 小小知識王</title>
+
   <style>
-    :root { --bg:#0b0c0f; --panel:#151922; --acc:#ff2a2a; --acc2:#ff6b6b; --text:#e8eefb; --muted:#a7b1c6; }
-    *{box-sizing:border-box}
-    body{margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans TC", Helvetica, Arial; background:linear-gradient(180deg,#0b0c0f,#10131a 40%,#0b0c0f); color:var(--text); display:flex; align-items:center; justify-content:center; min-height:100svh;}
-    .card{ width:min(860px, 92vw); background:rgba(21,25,34,.9); border:1px solid #222833; border-radius:24px; box-shadow:0 10px 40px rgba(0,0,0,.45); overflow:hidden}
-    header{padding:16px 20px; display:flex; align-items:center; gap:14px; border-bottom:1px solid #1f2530; background:linear-gradient(180deg, #171b24, #141925);} 
-    img.brand{height:34px; width:auto; display:block}
-    h1{font-size:18px; margin:0; letter-spacing:.4px}
-    main{padding:28px 24px 24px}
-    .qtext{font-size:22px; line-height:1.35; margin:4px 0 18px; font-weight:700}
-    .muted{color:var(--muted); font-size:14px}
-    .choices{display:grid; grid-template-columns:1fr; gap:12px}
-    @media (min-width:640px){ .choices{ grid-template-columns:1fr 1fr } }
-    button.choice{ padding:14px 16px; border-radius:14px; border:1px solid #2a3242; background:#131823; color:var(--text); text-align:left; cursor:pointer; transition:.15s transform ease, .15s border-color ease, .15s background ease; }
-    button.choice:hover{ transform:translateY(-1px); border-color:#3b465d; background:#0f1420 }
-    button.choice:active{ transform:translateY(0) scale(.99) }
-    .footer{display:flex; align-items:center; justify-content:space-between; gap:12px; padding-top:16px;}
-    .btn{border:1px solid #2a3242; background:#111521; color:var(--text); padding:10px 14px; border-radius:12px; cursor:pointer}
-    .btn[disabled]{opacity:.45; cursor:not-allowed}
-    .primary{background:linear-gradient(135deg,var(--acc),#ff9a9a); border:none; color:#260000; font-weight:700}
-    .progress{height:8px; background:#101521; border-radius:999px; overflow:hidden; border:1px solid #1e2530}
-    .bar{height:100%; width:0%; background:linear-gradient(90deg, var(--acc), var(--acc2)); transition: width .3s ease}
-    .result{display:grid; gap:12px}
-    .pill{display:inline-flex; align-items:center; gap:8px; background:#0f1520; border:1px solid #283043; padding:6px 10px; border-radius:999px; font-size:12px; color:var(--muted)}
-    .result h2{margin:.2rem 0 0; font-size:26px}
-    .share{display:flex; gap:8px; flex-wrap:wrap}
-    .hidden{display:none}
-    .small{font-size:12px; color:var(--muted)}
-    .hr{height:1px; background:#1f2530; margin:10px 0 0}
+    :root{
+      --w: min(920px, 94vw);
+    }
+
+    html, body { height: 100%; }
+
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, "Noto Sans TC", Segoe UI, Roboto, Arial, "Helvetica Neue", Helvetica, "微軟正黑體", sans-serif;
+      color:#e5e7eb;
+      /* 預設第一題背景，之後用 JS 依題目覆蓋 background-image */
+      background: #0f172a url('assets/01.jpeg') center 62% / 75% no-repeat fixed;
+    }
+
+    header{
+      width: min(45vw, var(--w));
+      margin:60px 0 10px auto;
+      padding:0 8px;
+    }
+    header > *{
+      max-width:90%;
+      margin-left:auto;
+    }
+
+    /* 標題：黑色 */
+    h1{
+      margin:0;
+      font-size: clamp(24px, 5vw, 38px);
+      letter-spacing:.5px;
+      color:#000000;
+    }
+
+    /* 副標題：黑色 */
+    p.sub{
+      margin:6px 0 0;
+      color:#000000;
+    }
+
+    main{
+      width: min(45vw, var(--w));
+      margin:10px 20vw 60px auto;
+      padding:16px;
+      display:flex;
+      flex-direction:column;
+      align-items:flex-end;
+    }
+
+    /* 題目卡片寬度固定 28vw */
+    .card{
+      background:#0b1220cc;
+      border:1px solid #1f2937;
+      border-radius:18px;
+      padding:18px;
+      margin:14px 0;
+      box-shadow:0 10px 30px rgba(0,0,0,.25);
+      width:28vw;
+      box-sizing:border-box;
+    }
+
+    .q{
+      font-weight:800;
+      font-size:20px;
+      margin:6px 0 12px;
+    }
+
+    /* 題目前敘述：紅色 #913533 */
+    .section-title{
+      font-size:18px;
+      font-weight:800;
+      color:#913533;
+      margin-bottom:4px;
+    }
+
+    .choices{
+      display:grid;
+      grid-template-columns:1fr;
+      gap:12px;
+    }
+    .choices button{
+      text-align:left;
+      border:1px solid #334155;
+      background:#0f172a;
+      color:#e5e7eb;
+      padding:12px 14px;
+      border-radius:12px;
+      cursor:pointer;
+      transition: transform .02s ease-in, border-color .15s ease, box-shadow .15s ease;
+    }
+
+    /* 滑鼠移上/點選：紅色框 */
+    .choices button:hover{
+      transform: translateY(-1px);
+      border-color:#ef4444;
+    }
+    .choices button.selected{
+      border-color:#ef4444;
+      box-shadow:0 0 0 3px rgba(239,68,68,.35) inset;
+    }
+
+    #explain{
+      margin-top:8px;
+      align-self:flex-end;
+    }
+
+    .explain-card{
+      background:#111827cc;
+      border:1px solid #1f2937;
+      border-radius:12px;
+      padding:12px 14px;
+      font-size:14px;
+      width:28vw;
+      box-sizing:border-box;
+    }
+
+    .controls{
+      margin-top:14px;
+      width:90%;
+      height:40px;
+    }
+
+    .btn{
+      background:#2563eb;
+      color:white;
+      border:none;
+      padding:12px 16px;
+      border-radius:12px;
+      cursor:pointer;
+      font-weight:700;
+    }
+
+    /* 下一題 / 交卷 固定在右側 30vw、下側 2vw */
+    #next,
+    #finish{
+      position:fixed;
+      right:30vw;
+      bottom:2vw;
+      z-index:20;
+    }
+
+    footer{
+      width: min(45vw, var(--w));
+      margin:0 0 30px auto;
+      padding:0 8px;
+      color:#cbd5e1;
+      font-size:12px;
+    }
+
+    /* 成績彈跳視窗（置中） */
+    #resultOverlay{
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,.65);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      z-index:60;
+    }
+    #resultModal{
+      background:#020617f0;
+      border-radius:18px;
+      padding:24px 28px;
+      max-width:320px;
+      width:80%;
+      text-align:center;
+      border:1px solid #e5e7eb33;
+      box-shadow:0 20px 40px rgba(0,0,0,.6);
+    }
+    #resultModal h2{
+      margin:0 0 10px;
+      font-size:20px;
+    }
+    #resultModal p{
+      margin:4px 0;
+      font-size:16px;
+    }
+
+    @media (max-width: 640px){
+      header{
+        width: var(--w);
+        margin:40px auto 10px;
+      }
+      header > *{
+        max-width:100%;
+        margin-left:0;
+      }
+
+      main, footer{
+        width: var(--w);
+        margin-left:auto;
+        margin-right:auto;
+      }
+
+      main{
+        align-items:stretch;
+      }
+      .card{
+        width:100%;
+      }
+      .explain-card{
+        width:100%;
+      }
+
+      #next,
+      #finish{
+        position:static;
+        margin-top:8px;
+      }
+      .controls{
+        height:auto;
+      }
+      #resultModal{
+        width:92%;
+      }
+    }
   </style>
 </head>
 <body>
-  <div class="card" role="region" aria-label="問答互動">
-    <header>
-      <img class="brand" src="logo.png" alt="Snap-on" />
-      <h1 id="title">Snap-on小測驗</h1>
-    </header>
-    <main>
-      <div class="muted" id="subtitle">共 <span id="total">—</span> 題 · <span id="mode">三題計分</span></div>
-      <div class="hr"></div>
-      <div class="progress" aria-hidden="true" style="margin:14px 0 18px"><div class="bar" id="bar"></div></div>
+  <!-- 左上角 GIF 已移除 -->
 
-      <div id="screen-question">
-        <div class="pill"><span id="index">1</span>/<span id="count">—</span></div>
-        <div class="qtext" id="qtext">載入中…</div>
-        <div class="choices" id="choices"></div>
-        <div class="footer">
-          <button class="btn" id="backBtn" aria-label="上一步">← 上一步</button>
-          <button class="btn primary" id="skipBtn" aria-label="跳過此題">跳過</button>
-        </div>
-      </div>
+  <header>
+    <h1>John Bean 小小知識王</h1>
+    <p class="sub">測試看看你對 John Bean 的了解程度!</p>
+  </header>
 
-      <div id="screen-result" class="hidden">
-        <div class="result">
-          <div class="pill" id="pill"></div>
-          <h2 id="rtitle">結果標題</h2>
-          <p id="rdesc" class="muted"></p>
-          <div class="share">
-            <button class="btn" id="restart">重新開始</button>
-            <button class="btn" id="copy">複製結果連結</button>
-          </div>
-        </div>
-      </div>
-    </main>
+  <main>
+    <div id="quiz"></div>
+    <div id="explain"></div>
+
+    <div class="controls">
+      <button id="next" class="btn">下一題</button>
+      <button id="finish" class="btn" style="display:none">交卷</button>
+    </div>
+
+    <div id="summary"></div>
+  </main>
+
+  <footer></footer>
+
+  <!-- 成績彈跳視窗 -->
+  <div id="resultOverlay">
+    <div id="resultModal"></div>
   </div>
 
-  <script>
-  // —— 可調整區：互動流程 ——
-  const FLOW = {
-    title: "Snap-on小測驗",
-    modeLabel: "三題計分",
-    tags: ["score"], // 單一向度：總分
-    questions: [
-      {
-        id: "q1",
-        text: "請問Snap-on集團在哪一年創立?",
-        options: [
-          { label: "1920年", scores: {"score": 1}, to: "q2" },
-          { label: "1930年", scores: {"score": 0}, to: "q2" },
-          { label: "1950年", scores: {"score": 0}, to: "q2" },
-        ]
-      },
-      {
-        id: "q2",
-        text: "以下哪一類工具產品是Snap-on最早拓展的主要市場?",
-        options: [
-          { label: "汽車維修", scores: {"score": 1}, to: "q3" },
-          { label: "園藝", scores: {"score": 0}, to: "q3" },
-          { label: "醫療外科", scores: {"score": 0}, to: "q3" },
-        ]
-      },
-      {
-        id: "q3",
-        text: "Snap-on旗下的BAHCO最廣為人知的代表產品是什麼?",
-        options: [
-          { label: "扭力測試儀", scores: {"score": 0} },
-          { label: "活動扳手", scores: {"score": 1} },
-          { label: "鉗子", scores: {"score": 0} },
-        ]
-      },
+<script>
+/********************
+ * 題庫
+ ********************/
+const QUESTIONS = [
+  {
+    q:'John Bean 於 1947 年推出哪項改變汽修產業的光學定位技術？',
+    options:[
+      'Visualiner®',
+      'OptiTrack 2000',
+      'BeamAlign System',
+      'VisionDrive Tool'
     ],
-    // 依總分決定結果
-    finish: { 
-      type: "threshold",
-      rules: [
-        { when: s => (s["score"]||0) === 3, result: "Excellent!" },
-        { when: s => (s["score"]||0) === 2, result: "Good Job!" },
-        { when: s => (s["score"]||0) <= 1, result: "再加油!" },
-      ]
-    },
-    results: {
-      "Excellent!": { title: "Excellent!", desc: "三題全對！你對 Snap-on / BAHCO 超熟～" },
-      "Good Job!": { title: "Good Job!", desc: "對了兩題，已經很不錯！" },
-      "再加油!":   { title: "再加油!",   desc: "再多了解一點品牌故事，下次一定可以更好！" },
-    }
-  };
+    answer:0,
+    explain:'💡 解析：Visualiner® 是全球第一款光學定位儀，利用光束與反射鏡進行測量，開啟現代化車輪定位時代。'
+  },
+  {
+    q:'Snap-on 創辦人 Joseph Johnson 當年設計的口號是？',
+    options:[
+      '一套工具做全部的事！',
+      '五個工具幹五十件活！',
+      '速度決定一切！',
+      '讓工具會思考！'
+    ],
+    answer:1,
+    explain:'💡 解析：“Five do the work of Fifty” 是 Snap-on 的創業精神，代表創新與高效率的象徵。'
+  },
+  {
+    q:'Snap-on 第一項專利產品是什麼？',
+    options:[
+      '可更換的套筒組',
+      'No. 6 棘輪扳手',
+      '第一台氣動工具',
+      '第一台工具車'
+    ],
+    answer:1,
+    explain:'💡 解析：No. 6 Ratchet 是 Snap-on 的第一項專利，奠定其精密工程與創新設計的基礎。'
+  },
+  {
+    q:'二戰時期，Snap-on 的工具主要支援哪個領域？',
+    options:[
+      '家庭修繕',
+      '摩托車改裝',
+      '農業機具',
+      '航空與軍用維修'
+    ],
+    answer:3,
+    explain:'💡 解析：在二戰期間，Snap-on 工具被廣泛用於維修飛機與軍事設備，成為盟軍後勤的重要支柱。'
+  },
+  {
+    q:'Snap-on 最具代表性的 Flank Drive® 技術有什麼特點？',
+    options:[
+      '讓螺帽不再滑牙',
+      '超輕量設計',
+      '可自動校正扭力',
+      '附 LED 照明'
+    ],
+    answer:0,
+    explain:'💡 解析：Flank Drive® 提供更強的咬合力，能防止螺帽圓角磨損，大幅提升工作效率與安全性。'
+  },
+  {
+    q:'Snap-on 旗下的手工具品牌 Bahco 起源於哪個國家？',
+    options:[
+      '美國',
+      '德國',
+      '瑞典',
+      '日本'
+    ],
+    answer:2,
+    explain:'💡 解析：Bahco 為瑞典知名品牌，其魚與鉤（Fish & Hook）標誌象徵品質與職人工藝。'
+  },
+  {
+    q:'在世界各地的專業修車廠中，哪個顏色最能代表 Snap-on？',
+    options:[
+      '藍色',
+      '紅色',
+      '黑色',
+      '銀色'
+    ],
+    answer:1,
+    explain:'💡 解析：鮮紅色的工具車是 Snap-on 的標誌，象徵熱情、力量與專業。'
+  },
+  {
+    q:'Snap-on 在美國首創的「行動工具車（Tool Truck）」有何特別之處？',
+    options:[
+      '賣冰淇淋的同時賣工具',
+      '提供上門維修服務',
+      '技師可在門口直接選購',
+      '展示新車試駕'
+    ],
+    answer:2,
+    explain:'💡 解析：Snap-on 行動工具車讓顧客在工作現場即可體驗與購買，是成功的直銷創舉。'
+  },
+  {
+    q:'Snap-on 長期被視為哪一類專業人士的標準品牌？',
+    options:[
+      '建築師',
+      '汽車維修技師',
+      '醫師',
+      '飛行員'
+    ],
+    answer:1,
+    explain:'💡 解析：對專業技師而言，Snap-on 不只是工具，更是信賴與專業的象徵。'
+  },
+  {
+    q:'2017 年 4 月，哪位美國總統親自造訪 Snap-on 位於威斯康辛州 Kenosha 的總部？',
+    options:[
+      'Barack Obama',
+      'George W. Bush',
+      'Donald J. Trump',
+      'Joe Biden'
+    ],
+    answer:2,
+    explain:'💡 解析：2017 年 4 月，總統 Donald J. Trump 到訪 Snap-on 總部，並簽署「Buy American & Hire American」行政命令，象徵對美國製造與職業教育的支持。'
+  }
+];
 
-  // —— 程式：渲染與流程控制 ——
-  const $ = sel => document.querySelector(sel);
-  const el = {
-    title: $('#title'), subtitle: $('#subtitle'), total: $('#total'), mode: $('#mode'),
-    qscreen: $('#screen-question'), rscreen: $('#screen-result'),
-    qtext: $('#qtext'), choices: $('#choices'), index: $('#index'), count: $('#count'),
-    bar: $('#bar'), back: $('#backBtn'), skip: $('#skipBtn'),
-    pill: $('#pill'), rtitle: $('#rtitle'), rdesc: $('#rdesc'), restart: $('#restart'), copy: $('#copy')
-  };
+/********************
+ * 每題對應的背景圖
+ * index：0–9 對應第 1–10 題
+ ********************/
+const BG_MAP = {
+  0: 'assets/01.jpeg',
+  1: 'assets/02.png',
+  2: 'assets/03.jpeg',
+  3: 'assets/04.jpeg',
+  4: 'assets/05.jpeg',
+  5: 'assets/06.jpeg',
+  6: 'assets/07.jpeg',
+  7: 'assets/08.jpeg',
+  8: 'assets/09.jpeg',
+  9: 'assets/10.png'
+};
 
-  let history = [];          // 已回答題目的 {id, pickedIndex}
-  let scores = {};           // 各向度分數
-  let currentId = FLOW.questions[0].id;
+let state = {
+  idx: 0,
+  score: 0,
+  selected: {},
+  startAt: Date.now(),
+  finished: false,
+  explainShown: {}
+};
 
-  function init(){
-    document.title = FLOW.title;
-    el.title.textContent = FLOW.title;
-    el.mode.textContent = FLOW.modeLabel || '';
-    el.total.textContent = FLOW.questions.length;
-    el.count.textContent = FLOW.questions.length;
-    el.back.disabled = true;
-    el.skip.addEventListener('click', onSkip);
-    el.back.addEventListener('click', onBack);
-    el.restart.addEventListener('click', restart);
-    el.copy.addEventListener('click', copyLink);
-    FLOW.tags.forEach(t => scores[t] = 0);
-    const hash = new URL(location.href).hash;
-    if (hash.startsWith('#r=')) { // 支援結果直達連結
-      const key = decodeURIComponent(hash.slice(3));
-      return showResult(key);
-    }
-    renderQuestion(currentId);
+const POINTS_PER_Q = 1;
+
+const $  = (s)=>document.querySelector(s);
+const quizEl       = $('#quiz');
+const explainEl    = $('#explain');
+const nextBtn      = $('#next');
+const finishBtn    = $('#finish');
+const summaryEl    = $('#summary');
+const overlayEl    = $('#resultOverlay');
+const resultModal  = $('#resultModal');
+
+function render(){
+  const total = QUESTIONS.length;
+
+  nextBtn.style.display  = state.idx < total-1 ? 'inline-block' : 'none';
+  finishBtn.style.display= state.idx === total-1 ? 'inline-block' : 'none';
+
+  const q = QUESTIONS[state.idx];
+  quizEl.innerHTML = '';
+  explainEl.innerHTML = '';
+
+  const card = document.createElement('div');
+  card.className = 'card';
+
+  if (state.idx === 0){
+    const t = document.createElement('div');
+    t.className = 'section-title';
+    t.textContent = '1️⃣ 光學定位的先驅';
+    card.appendChild(t);
+  }
+  if (state.idx === 1){
+    const t = document.createElement('div');
+    t.className = 'section-title';
+    t.textContent = '2️⃣ 革命性的創意';
+    card.appendChild(t);
+  }
+  if (state.idx === 2){
+    const t = document.createElement('div');
+    t.className = 'section-title';
+    t.textContent = '3️⃣ 專利開端';
+    card.appendChild(t);
+  }
+  if (state.idx === 3){
+    const t = document.createElement('div');
+    t.className = 'section-title';
+    t.textContent = '4️⃣ 戰場上的工具英雄';
+    card.appendChild(t);
+  }
+  if (state.idx === 4){
+    const t = document.createElement('div');
+    t.className = 'section-title';
+    t.textContent = '5️⃣ Flank Drive® 的魔力';
+    card.appendChild(t);
+  }
+  if (state.idx === 5){
+    const t = document.createElement('div');
+    t.className = 'section-title';
+    t.textContent = '6️⃣ 百年傳承的歐洲血統';
+    card.appendChild(t);
+  }
+  if (state.idx === 6){
+    const t = document.createElement('div');
+    t.className = 'section-title';
+    t.textContent = '7️⃣ 紅色工具車的傳奇';
+    card.appendChild(t);
+  }
+  if (state.idx === 7){
+    const t = document.createElement('div');
+    t.className = 'section-title';
+    t.textContent = '8️⃣ 移動的展示間';
+    card.appendChild(t);
+  }
+  if (state.idx === 8){
+    const t = document.createElement('div');
+    t.className = 'section-title';
+    t.textContent = '9️⃣ 精準的代名詞';
+    card.appendChild(t);
+  }
+  if (state.idx === 9){
+    const t = document.createElement('div');
+    t.className = 'section-title';
+    t.textContent = '🔟 總統造訪 Snap-on';
+    card.appendChild(t);
   }
 
-  function getQ(id){ return FLOW.questions.find(q=>q.id===id); }
+  const qEl = document.createElement('div');
+  qEl.className = 'q';
+  qEl.textContent = q.q;
+  card.appendChild(qEl);
 
-  function renderQuestion(id){
-    const q = getQ(id);
-    if(!q) return finish();
-    currentId = id;
-    el.qscreen.classList.remove('hidden');
-    el.rscreen.classList.add('hidden');
-    el.index.textContent = 1 + history.length;
-    el.qtext.textContent = q.text;
+  const choices = document.createElement('div');
+  choices.className = 'choices';
 
-    // 進度條
-    const progress = Math.min(100, Math.round((history.length / FLOW.questions.length) * 100));
-    el.bar.style.width = progress + '%';
+  q.options.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.textContent = `${'ABCD'[i]}. ${opt}`;
 
-    // 選項
-    el.choices.innerHTML = '';
-    q.options.forEach((opt, i) => {
-      const b = document.createElement('button');
-      b.className = 'choice';
-      b.setAttribute('role','button');
-      b.textContent = opt.label;
-      b.addEventListener('click', () => onPick(q, i));
-      el.choices.appendChild(b);
+    const sel = state.selected[state.idx];
+    if (sel === i) btn.classList.add('selected');
+
+    btn.addEventListener('click', () => {
+      state.selected[state.idx] = i;
+      render();
     });
 
-    el.back.disabled = history.length === 0;
-    el.skip.disabled = false;
-  }
+    choices.appendChild(btn);
+  });
 
-  function onPick(q, pickedIndex){
-    const opt = q.options[pickedIndex];
-    history.push({ id:q.id, pickedIndex });
-    if (opt.scores) Object.entries(opt.scores).forEach(([k,v]) => scores[k] = (scores[k]||0) + Number(v||0));
-    const next = opt.to || nextSequential(q.id);
-    if (next) return renderQuestion(next);
-    finish();
-  }
+  card.appendChild(choices);
+  quizEl.appendChild(card);
 
-  function nextSequential(id){
-    const idx = FLOW.questions.findIndex(x=>x.id===id);
-    const next = FLOW.questions[idx+1];
-    return next?.id || null;
-  }
+  // 根據題目切換背景圖（大小與位置由 CSS 控制，不變）
+  const bgPath = BG_MAP[state.idx] || 'assets/01.jpeg';
+  document.body.style.backgroundImage = `url('${bgPath}')`;
+}
 
-  function onBack(){
-    if (!history.length) return;
-    const last = history.pop();
-    const q = getQ(last.id);
-    const chosen = q.options[last.pickedIndex];
-    if (chosen.scores) Object.entries(chosen.scores).forEach(([k,v]) => scores[k] = (scores[k]||0) - Number(v||0));
-    const prevId = history.length ? history[history.length-1].id : FLOW.questions[0].id;
-    renderQuestion(prevId);
-  }
+function showExplain(idx){
+  const q = QUESTIONS[idx];
+  const text = q.explain;
+  if (!text) return;
 
-  function onSkip(){
-    const q = getQ(currentId);
-    const next = nextSequential(q.id);
-    if (next) { history.push({ id:q.id, pickedIndex: -1 }); renderQuestion(next); }
-    else finish();
-  }
+  const sel = state.selected[idx];
+  let correctnessHtml = '';
+  if (typeof sel === 'number'){
+    const isCorrect   = sel === q.answer;
+    const selText     = `${'ABCD'[sel]}. ${q.options[sel]}`;
+    const correctText = `${'ABCD'[q.answer]}. ${q.options[q.answer]}`;
 
-  function finish(){
-    let key = null;
-    if (FLOW.finish?.type === 'threshold'){
-      const rule = FLOW.finish.rules.find(r => r.when(scores));
-      key = rule ? rule.result : "再加油!";
+    if (isCorrect){
+      correctnessHtml = `
+        <div style="margin-bottom:6px;">
+          ✅ 你的答案：${selText}（正確）
+        </div>
+      `;
     } else {
-      const entries = Object.entries(scores).sort((a,b)=>b[1]-a[1]);
-      key = entries[0]?.[0] || "再加油!";
+      correctnessHtml = `
+        <div style="margin-bottom:6px;">
+          ❌ 你的答案：${selText}<br>
+          正確答案：${correctText}
+        </div>
+      `;
     }
-    showResult(key);
   }
 
-  function showResult(key){
-    el.qscreen.classList.add('hidden');
-    el.rscreen.classList.remove('hidden');
-    el.pill.textContent = `總分：${scores["score"]||0} / 3`;
-    el.rtitle.textContent = FLOW.results[key]?.title || key;
-    el.rdesc.textContent = FLOW.results[key]?.desc || '';
-    el.bar.style.width = '100%';
-    location.hash = '#r=' + encodeURIComponent(key);
+  explainEl.innerHTML = `
+    <div class="explain-card">
+      ${correctnessHtml}
+      <div>${text}</div>
+    </div>
+  `;
+}
+
+function showResultModal(score, maxScore){
+  const percent = Math.round((score / maxScore) * 100);
+
+  resultModal.innerHTML = `
+    <h2>作答結果</h2>
+    <p>得分：<strong>${score} / ${maxScore}</strong></p>
+    <p>正確率：<strong>${percent}%</strong></p>
+    <button id="restartBtn" class="btn" style="margin-top:16px;">再挑戰一次！</button>
+  `;
+
+  overlayEl.style.display = 'flex';
+
+  const restartBtn = document.querySelector('#restartBtn');
+  restartBtn.onclick = () => {
+    overlayEl.style.display = 'none';
+    state.idx = 0;
+    state.score = 0;
+    state.selected = {};
+    state.startAt = Date.now();
+    state.finished = false;
+    state.explainShown = {};
+    explainEl.innerHTML = '';
+    summaryEl.innerHTML = '';
+    render();
+  };
+}
+
+function grade(){
+  let score = 0;
+
+  QUESTIONS.forEach((q, i) => {
+    const sel = state.selected[i];
+    if (sel === q.answer) {
+      score += POINTS_PER_Q;
+    }
+  });
+
+  state.score    = score;
+  state.finished = true;
+
+  const maxScore = QUESTIONS.length * POINTS_PER_Q;
+  showResultModal(score, maxScore);
+}
+
+nextBtn.addEventListener('click', () => {
+  const total = QUESTIONS.length;
+  const idx   = state.idx;
+
+  if (!state.explainShown[idx] && QUESTIONS[idx].explain){
+    if (typeof state.selected[idx] !== 'number'){
+      alert('請先選擇一個答案喔！');
+      return;
+    }
+    state.explainShown[idx] = true;
+    showExplain(idx);
+    return;
   }
 
-  function restart(){
-    history = []; scores = {}; FLOW.tags.forEach(t => scores[t]=0);
-    location.hash = '';
-    currentId = FLOW.questions[0].id;
-    renderQuestion(currentId);
+  if (idx < total - 1) {
+    state.idx++;
+    render();
+  }
+});
+
+finishBtn.addEventListener('click', () => {
+  const idx = state.idx;
+
+  if (!state.explainShown[idx] && QUESTIONS[idx].explain){
+    if (typeof state.selected[idx] !== 'number'){
+      alert('請先選擇一個答案喔！');
+      return;
+    }
+    state.explainShown[idx] = true;
+    showExplain(idx);
+    return;
   }
 
-  async function copyLink(){
-    try{ await navigator.clipboard.writeText(location.href); alert('已複製結果連結'); }catch(e){ alert('複製失敗，請手動複製網址'); }
-  }
+  grade();
+});
 
-  init();
-  </script>
+// 初次畫面
+render();
+</script>
 </body>
 </html>
